@@ -3,21 +3,25 @@
  */
 package com.movile.sbs.harvester;
 
+import java.io.BufferedWriter;
 import java.io.File;
+import java.io.FileOutputStream;
+import java.io.OutputStreamWriter;
+import java.io.Writer;
 import java.nio.file.Files;
 import java.nio.file.Paths;
-import java.util.Arrays;
+import java.sql.ResultSet;
+import java.sql.Statement;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.movile.sbs.harvester.comparator.RecordComparator;
-import com.movile.sbs.harvester.jobs.ExternalSorterJob;
-import com.movile.sbs.harvester.jobs.Job;
-import com.movile.sbs.harvester.jobs.MergerJob;
+import com.movile.sbs.harvester.bean.Record;
+import com.movile.sbs.harvester.sqlite.DataDAO;
 import com.movile.sbs.harvester.util.Chronometer;
-import com.movile.sbs.harvester.util.FilePartitionerAsync;
 
 /**
  * @author eitikimura
@@ -25,6 +29,8 @@ import com.movile.sbs.harvester.util.FilePartitionerAsync;
  */
 public class JobProgram {
 
+    private static final int BATCH_SIZE = 10000;
+    private static final int REPORT_SIZE = 100000;
     private static Logger log = LoggerFactory.getLogger(JobProgram.class);
     
     /**
@@ -39,57 +45,68 @@ public class JobProgram {
         genChron.start();
         opChron.start();
         
-        String outputDirectory = "partitions/dataset";
-        FilePartitionerAsync partitioner = new FilePartitionerAsync(new File(outputDirectory), "part", 50);
+        // creates the data structure
+        DataDAO dao = new DataDAO(true);
+        log.info("row count: {}", dao.getRowCount());
         
+        List<Record> records = new ArrayList<Record>();
+        
+        AtomicInteger stats = new AtomicInteger();
         //simulate data ingestion to partition
-        Files.newBufferedReader(Paths.get("dataset/dataset.log"))
+        Files.newBufferedReader(Paths.get("/home/eitikimura/dataset.log"))
              .lines()
              .forEach((line) -> {
                  try {
-                    // write file to disk with partition
-                    partitioner.writeln(line);
+                     String att[] = line.split(" ");
+                     Record rec = new Record(att[0], Long.parseLong(att[1]), Short.valueOf(att[2].trim()), Short.valueOf(att[3]));
+                     records.add(rec);
+                     stats.incrementAndGet();
+                     
+                     if (records.size() == BATCH_SIZE) {
+                         dao.persist(records);
+                         records.clear(); 
+                     }
+                     
+                     if (stats.get() == REPORT_SIZE) {
+                         stats.set(0);
+                         log.info("row count: {}", dao.getRowCount());
+                     }
                 } catch (Exception e) {
                    throw new RuntimeException(e);
                 }
              });
         
-        // close the partitioner program
-        List<File> files = partitioner.close();
-        files.stream().forEach((f)-> {
-           log.info("partition created: {} - {}MB", f.getPath(), ((f.length() /1024) /1024));
-        });
+        dao.persist(records);
         
-        log.info("Finished PARTITION job, time elapsed: {}s", opChron.getSeconds());
+        log.info("Finished PERSISTENCE job, time elapsed: {}s", opChron.getSeconds());
         opChron.start();
         
         log.info("Starting Sort Job");
         
-        Job externalSorter = new ExternalSorterJob();
-        externalSorter.setWorkDir("partitions/dataset");
-        externalSorter.setOutputDir("partitions/dataset/pass-1");
-        externalSorter.setComparator(new RecordComparator());
+        File outputFile = new File("partitions/sorted-output");
+        Writer writer = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(outputFile)));           
         
-        File[] resultFiles = externalSorter.executeJob();
-        Arrays.asList(resultFiles)
-              .stream()
-              .forEach(file -> log.info(file.getPath()));
+        Statement statement = dao.getStatement();
+        ResultSet rs = statement.executeQuery("SELECT * FROM raw_data ORDER BY priority DESC, type DESC, timestamp DESC");
+  
+        int counter = 0;
+        while (rs.next()) {
+            Record rec = new Record(rs.getString("key"), rs.getLong("timestamp"), (short) rs.getInt("type"), (short) rs.getInt("priority"));
+            writer.write(rec.toString());
+            writer.write("\n");
+            counter++;
+            
+            if (counter == BATCH_SIZE) {
+                counter = 0;
+            }
+            
+            if (stats.get() == REPORT_SIZE) {
+                stats.set(0);
+                log.info("writen: {} rows", REPORT_SIZE);
+            }
+        }
         
-        log.info("Finished SORT job, time elapsed: {}s", opChron.getSeconds());
-        opChron.start();
-        
-        log.info("Starting Merge Job");
-        
-        Job fileMergerJob = new MergerJob();
-        fileMergerJob.setWorkDir("partitions/dataset/pass-1");
-        fileMergerJob.setOutputDir("partitions/dataset/pass-2");
-        
-        resultFiles = fileMergerJob.executeJob();
-        Arrays.asList(resultFiles)
-              .stream()
-              .forEach(file -> log.info(file.getPath()));
-        
-        log.info("Finished MERGE job, time elapsed: {}s", opChron.getSeconds());
+        writer.close();
         log.info("FINISHED. Total time elapsed: {}min", genChron.getMinutes());
     }
 

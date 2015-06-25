@@ -18,7 +18,7 @@ public class DatasetGenerator {
         System.out.println("starting");
         
         long number = 551900000000l;
-        long size = 20000000l;
+        long size = 50000000l;
 
         for (long i = 0; i < size; i++) {
             log.info("{} {} {} {}", (number + i), System.currentTimeMillis(), getNumber(0, 2), getNumber(0, 10));
