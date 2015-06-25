@@ -43,7 +43,7 @@ public class JobProgram {
         FilePartitionerAsync partitioner = new FilePartitionerAsync(new File(outputDirectory), "part", 50);
         
         //simulate data ingestion to partition
-        Files.newBufferedReader(Paths.get("dataset/dataset.log"))
+        Files.newBufferedReader(Paths.get("log/data-set-50M.log"))
              .lines()
              .forEach((line) -> {
                  try {

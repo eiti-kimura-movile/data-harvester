@@ -61,6 +61,14 @@ public final class FileMerger {
                 if (left.compareTo(right) < 0) {
                     writeToFile(writer, left);
                     left = transform(leftReader.readLine());
+                    
+                } else if (left.compareTo(right) == 0) { 
+                    // equal data get one of them
+                    writeToFile(writer, right);
+                    right = transform(rightReader.readLine());
+                    
+                    //discard the other, do not write it to file
+                    left = transform(leftReader.readLine());
                 } else {
                     writeToFile(writer, right);
                     right = transform(rightReader.readLine());

@@ -19,7 +19,7 @@
 	</appender>
 
 	<appender name="PLAIN" class="ch.qos.logback.core.FileAppender">
-		<file>log/plain.log</file>
+		<file>log/plain-dataset.log</file>
 		<append>false</append>
 		<encoder>
 			<pattern>%msg%n</pattern>

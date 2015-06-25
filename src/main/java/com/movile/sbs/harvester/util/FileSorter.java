@@ -78,14 +78,14 @@ public final class FileSorter {
                  .sorted() // natural sort
                  .collect(Collectors.toList());
 
-        // apply a different comparator
-        if (comparator != null) {
-            Collections.sort(records, comparator);
-        }
-        
         // distinct by key
         if (distinct) {
             records = records.stream().distinct().collect(Collectors.toList());
+        }
+        
+        // apply a different comparator
+        if (comparator != null) {
+            Collections.sort(records, comparator);
         }
 
         // write file to disk
