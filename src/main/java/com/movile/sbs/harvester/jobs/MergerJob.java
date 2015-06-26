@@ -1,9 +1,11 @@
 package com.movile.sbs.harvester.jobs;
 
 import java.io.File;
-import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.stream.Collectors;
 
 import org.slf4j.Logger;
@@ -29,64 +31,67 @@ public final class MergerJob implements Job {
         chron.start();
 
         // get a list of files to process
-        List<File> workFiles = getWorkDirFiles().stream()
-                .filter(file -> file.isFile()) // files only
-                .filter(file -> !file.isHidden()) // not hidden files
-                .collect(Collectors.toList());
-
-        // recursive navigate and merge files of dir
-        File output = navigateAndMerge(workFiles);
-        removeTmpFile(output.getName());
+        List<File> workFiles = getWorkingFiles(this.workDir);
+        ExecutorService executor = Executors.newFixedThreadPool(4);
         
+        int pass = 1;
+        
+        while (workFiles.size() > 1) {
+            Chronometer chronPass = new Chronometer();
+            chronPass.start();
+            log.info("[MERGE_JOB] starting the pass {}, file(s) to merge: {}", pass, workFiles.size());
+            
+            List<List<File>> workingBatches = FileMerger.batches(workFiles, 2).collect(Collectors.toList());
+            CountDownLatch latch = new CountDownLatch(workingBatches.size());
+            
+            // breaks in batches of 2 files
+            workingBatches.stream().forEach(sublist -> {
+                Runnable runnable = () -> {
+                    Chronometer chronThread = new Chronometer();
+                    chronThread.start();
+                    File output = new File(outputDir + File.separator + "_tmp-" + System.nanoTime());
+                    try {
+                        FileMerger fileMerger = new FileMerger(sublist, output);
+                        output = fileMerger.merge();
+                    } catch (Exception e) {
+                        log.error("Error merging files: {}, e: {}", sublist, e.getCause(), e);
+                    } finally {
+                        latch.countDown();
+                        log.info("[MERGE_THREAD] finished to merge file(s): {}, ouput: {}, time elapsed: {}s", sublist, output, chronThread.getSeconds()); 
+                    }
+                };
+                
+                executor.execute(runnable);
+            });
+            
+            latch.await(); // wait tasks to finish merge process
+            
+            System.gc();
+            log.info("[MERGE_JOB] pass-{} finished (time elapsed: {}s)", pass++, chronPass.getSeconds());
+            
+            //read directory againg
+            workFiles = getWorkingFiles(this.outputDir)
+                        .stream()
+                        //.filter(f -> f.getName().contains("_tmp-")) //just processed files
+                        .collect(Collectors.toList());
+        }
+
+        executor.shutdown();
         chron.stop();
-        log.info("[MERGER] Job completed in: {} seconds - file: {} - {}MB", chron.getSeconds(), output.getName(), output.length() / (1024 * 1024));
+        log.info("[MERGE_JOB] Job completed in: {} seconds", chron.getSeconds());
         return this.outputDir.listFiles();
     }
 
-    
-    
-    /**
-     * remove merge temp files
-     */
-    private void removeTmpFile(String output) {
-        Arrays.asList(outputDir.listFiles()).stream()
-              .filter(f -> f.isFile()) //only files
-              .filter(f -> !output.equals(f.getName())) // exclude the output result file
-              .forEach(f -> f.delete());
-    }
-
-    /**
-     * recursive navigate and merge directory files
-     * @param list a list of valid files to merge
-     * @return a merged output file
-     * @throws IOException in case of file operation problems
-     */
-    public File navigateAndMerge(List<File> list) throws IOException {
-        
-         if (list.size() == 1) {
-            return list.remove(0);
-         } else {
-            File left = list.remove(0);
-            File right = navigateAndMerge(list);
-
-            // call merge-sort merge to merge sorted files
-            FileMerger merger = new FileMerger(left, right);
-
-            log.info("[MERGER] merging files {} and {}", left.getName(), right.getName());
-            
-            // execute and get the merged file
-            File output = merger.merge(outputDir.getPath());
-            return output;
-        }
-    }
-    
     /**
      * get a list of workdir files
      * @return the directory files
      */
-    private List<File> getWorkDirFiles() {
-        return Arrays.asList(workDir.listFiles()).stream()
-                .sorted().collect(Collectors.toList());
+    private List<File> getWorkingFiles(File dir) {
+
+        return Arrays.asList(dir.listFiles()).stream()
+                .filter(file -> file.isFile()) // files only
+                .filter(file -> !file.isHidden()) // not hidden files
+                .collect(Collectors.toList());
     }
 
     /**

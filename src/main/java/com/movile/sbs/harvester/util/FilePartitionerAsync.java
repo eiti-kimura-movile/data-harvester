@@ -171,7 +171,10 @@ public class FilePartitionerAsync extends Thread {
         // clear the queue
         queue.clear();
         
-        writer.close(); // close already flushes the stream first
+        if (writer != null) {
+            writer.close(); // close already flushes the stream first
+        }
+        
         return chunks;
     }
 

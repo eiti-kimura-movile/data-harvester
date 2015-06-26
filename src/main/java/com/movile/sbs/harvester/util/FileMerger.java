@@ -8,6 +8,9 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.io.Writer;
+import java.util.List;
+import java.util.stream.IntStream;
+import java.util.stream.Stream;
 
 import com.movile.sbs.harvester.bean.Record;
 
@@ -19,34 +22,73 @@ public final class FileMerger {
 
     private File leftPart;
     private File rightPart;
+    private File outputFile;
 
-    public FileMerger(File leftPart, File rightPart) {
-        this.leftPart = prepareWorkingFile(leftPart);
-        this.rightPart = prepareWorkingFile(rightPart);
-
-    }
-
-    private File prepareWorkingFile(File file) {
-        // rename and override the previous merged file
-        if (file.getName().trim().toLowerCase().contains("merged")) {
-            File tmp = new File(file.getParentFile() + File.separator + "_tmp-step-merge");
-            tmp.delete();
-            file.renameTo(tmp);
-            return tmp;
+    public FileMerger(List<File> files, File outputFile) {
+        this(files);
+        
+        if (outputFile == null) {
+            throw new IllegalArgumentException("you need at least one file to process");
         }
-        return file;
+        
+        this.outputFile = outputFile;
     }
-    
+
+    public FileMerger(List<File> files) {
+
+        if (files == null || files.size() == 0) {
+            throw new IllegalArgumentException("you need at least one file to process");
+        }
+
+        if (files.size() == 2) {
+            this.leftPart = files.get(0);
+            this.rightPart = files.get(1);
+
+        } else if (files.size() == 1) {
+            this.leftPart = files.get(0);
+        } else {
+            throw new IllegalArgumentException("can not have more than 2 files to merge");
+        }
+        
+        this.outputFile = new File( this.leftPart.getParent() + File.separator + "_tmp-" + System.nanoTime());
+    }
+
+    public FileMerger(File leftPart, File rightPart, File outputFile) {
+
+        if (outputFile == null || (leftPart == null && rightPart == null)) {
+            throw new IllegalArgumentException("the file parts and output file can not be null");
+        }
+
+        this.leftPart = leftPart;
+        this.rightPart = rightPart;
+        this.outputFile = outputFile;
+    }
+
     /**
      * sort file
      * @param filePath the input file path to sort
      * @return the new sorted File
      * @throws IOException
      */
-    public File merge(String outputDirPath) throws IOException {
+    public File merge() throws IOException {
 
-        File output = new File(outputDirPath + File.separator + "merged-output");
-        Writer writer = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(output.getPath()), "UTF8"));
+        // nothing to process
+        if (leftPart == null && rightPart == null) {
+            return null;
+        }
+
+        // there is only one file to process
+        if (leftPart != null && rightPart == null) {
+            this.outputFile = leftPart;
+            return this.outputFile;
+        }
+
+        if (rightPart != null && leftPart == null) {
+            this.outputFile = rightPart;
+            return this.outputFile;
+        }
+
+        Writer writer = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(outputFile.getPath()), "UTF8"));
 
         BufferedReader leftReader = new BufferedReader(new FileReader(leftPart));
         BufferedReader rightReader = new BufferedReader(new FileReader(rightPart));
@@ -61,13 +103,13 @@ public final class FileMerger {
                 if (left.compareTo(right) < 0) {
                     writeToFile(writer, left);
                     left = transform(leftReader.readLine());
-                    
-                } else if (left.compareTo(right) == 0) { 
+
+                } else if (left.compareTo(right) == 0) {
                     // equal data get one of them
                     writeToFile(writer, right);
                     right = transform(rightReader.readLine());
-                    
-                    //discard the other, do not write it to file
+
+                    // discard the other, do not write it to file
                     left = transform(leftReader.readLine());
                 } else {
                     writeToFile(writer, right);
@@ -87,7 +129,35 @@ public final class FileMerger {
         rightReader.close();
         writer.close();
 
-        return output;
+        // remove files
+        if (leftPart != null) {
+            leftPart.delete();
+        }
+        
+        if (rightPart != null) {
+            rightPart.delete();
+        }
+
+        return outputFile;
+    }
+
+    /**
+     * split a list into smaller pieces of a given size
+     * @param source the list of data
+     * @param length the size of batches
+     * @return a Stream of batches
+     */
+    public static <T> Stream<List<T>> batches(List<T> source, int length) {
+        if (length <= 0)
+            throw new IllegalArgumentException("length = " + length);
+
+        int size = source.size();
+        if (size <= 0) {
+            return Stream.empty();
+        }
+
+        int fullChunks = (size - 1) / length;
+        return IntStream.range(0, fullChunks + 1).mapToObj(n -> source.subList(n * length, n == fullChunks ? size : (n + 1) * length));
     }
 
     public Record transform(String line) {

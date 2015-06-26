@@ -40,10 +40,10 @@ public class JobProgram {
         opChron.start();
         
         String outputDirectory = "partitions/dataset";
-        FilePartitionerAsync partitioner = new FilePartitionerAsync(new File(outputDirectory), "part", 50);
+        FilePartitionerAsync partitioner = new FilePartitionerAsync(new File(outputDirectory), "part", 20);
         
         //simulate data ingestion to partition
-        Files.newBufferedReader(Paths.get("log/data-set-50M.log"))
+        Files.newBufferedReader(Paths.get("log/data-set-100M.log"))
              .lines()
              .forEach((line) -> {
                  try {
@@ -84,8 +84,8 @@ public class JobProgram {
         fileMergerJob.setWorkDir("partitions/dataset/pass-1");
         fileMergerJob.setOutputDir("partitions/dataset/pass-2");
         
-        resultFiles = fileMergerJob.executeJob();
-        Arrays.asList(resultFiles)
+        File[] mergeResultFiles = fileMergerJob.executeJob();
+        Arrays.asList(mergeResultFiles)
               .stream()
               .forEach(file -> log.info(file.getPath()));
         
