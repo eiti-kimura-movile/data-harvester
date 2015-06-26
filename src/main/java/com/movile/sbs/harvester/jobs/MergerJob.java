@@ -43,6 +43,8 @@ public final class MergerJob implements Job {
         return this.outputDir.listFiles();
     }
 
+    
+    
     /**
      * remove merge temp files
      */
