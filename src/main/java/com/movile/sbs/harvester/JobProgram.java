@@ -53,7 +53,7 @@ public class JobProgram {
         
         AtomicInteger stats = new AtomicInteger();
         //simulate data ingestion to partition
-        Files.newBufferedReader(Paths.get("/home/eitikimura/dataset.log"))
+        Files.newBufferedReader(Paths.get("log/data-set-50M.log"))
              .lines()
              .forEach((line) -> {
                  try {
