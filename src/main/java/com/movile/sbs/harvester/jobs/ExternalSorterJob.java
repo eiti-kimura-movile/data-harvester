@@ -31,7 +31,7 @@ public final class ExternalSorterJob implements Job {
     @Override
     public File[] executeJob() throws Exception {
 
-        ExecutorService executor = Executors.newFixedThreadPool(4);
+        ExecutorService executor = Executors.newFixedThreadPool(6);
         Chronometer chron = new Chronometer();
         chron.start();
 

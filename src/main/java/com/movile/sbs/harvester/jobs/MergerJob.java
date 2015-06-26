@@ -32,7 +32,7 @@ public final class MergerJob implements Job {
 
         // get a list of files to process
         List<File> workFiles = getWorkingFiles(this.workDir);
-        ExecutorService executor = Executors.newFixedThreadPool(4);
+        ExecutorService executor = Executors.newFixedThreadPool(8);
         
         int pass = 1;
         
