@@ -31,7 +31,7 @@ public final class ExternalSorterJob implements Job {
     @Override
     public File[] executeJob() throws Exception {
 
-        ExecutorService executor = Executors.newFixedThreadPool(2);
+        ExecutorService executor = Executors.newFixedThreadPool(4);
         Chronometer chron = new Chronometer();
         chron.start();
 
@@ -61,6 +61,7 @@ public final class ExternalSorterJob implements Job {
                     latch.countDown();
                     log.debug("[SORTER] file: {} processed in {} sec, output file: {}, pending to execute: {}", 
                         file.getName(), timer.getSeconds(), (output != null ? output.getPath() : "ERROR"), latch.getCount());
+                    System.gc();
                 }
             };
             
