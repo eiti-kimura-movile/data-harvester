@@ -53,7 +53,7 @@ public class JobProgram {
         
         AtomicInteger stats = new AtomicInteger();
         //simulate data ingestion to partition
-        Files.newBufferedReader(Paths.get("log/data-set-50M.log"))
+        Files.newBufferedReader(Paths.get("log/data-set-100M.log"))
              .lines()
              .forEach((line) -> {
                  try {
@@ -89,16 +89,11 @@ public class JobProgram {
         Statement statement = dao.getStatement();
         ResultSet rs = statement.executeQuery("SELECT * FROM raw_data ORDER BY priority DESC, type DESC, timestamp DESC");
   
-        int counter = 0;
         while (rs.next()) {
             Record rec = new Record(rs.getString("key"), rs.getLong("timestamp"), (short) rs.getInt("type"), (short) rs.getInt("priority"));
             writer.write(rec.toString());
             writer.write("\n");
-            counter++;
-            
-            if (counter == BATCH_SIZE) {
-                counter = 0;
-            }
+            stats.incrementAndGet();
             
             if (stats.get() == REPORT_SIZE) {
                 stats.set(0);
