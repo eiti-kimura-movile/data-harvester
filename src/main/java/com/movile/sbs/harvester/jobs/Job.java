@@ -20,6 +20,8 @@ public interface Job {
     
     void setOutputDir(String outputDirectory);
     
+    File getOutputDir();
+    
     default void setComparator(Comparator<Record> comparator) {
         // do nothing
         throw new NullPointerException("this method is not implemented");

@@ -31,7 +31,8 @@ public final class ExternalSorterJob implements Job {
     @Override
     public File[] executeJob() throws Exception {
 
-        ExecutorService executor = Executors.newFixedThreadPool(6);
+        int cores = Runtime.getRuntime().availableProcessors();
+        ExecutorService executor = Executors.newFixedThreadPool(cores);
         Chronometer chron = new Chronometer();
         chron.start();
 
@@ -132,6 +133,11 @@ public final class ExternalSorterJob implements Job {
     public void setOutputDir(String outputDirectory) {
         this.outputDir = new File(outputDirectory.trim());
         prepareOutputDir();
+    }
+    
+    @Override
+    public File getOutputDir() {
+        return this.outputDir;
     }
 
 }

@@ -27,12 +27,13 @@ public final class MergerJob implements Job {
     @Override
     public File[] executeJob() throws Exception {
 
+        int cores = Runtime.getRuntime().availableProcessors();
         Chronometer chron = new Chronometer();
         chron.start();
 
         // get a list of files to process
         List<File> workFiles = getWorkingFiles(this.workDir);
-        ExecutorService executor = Executors.newFixedThreadPool(8);
+        ExecutorService executor = Executors.newFixedThreadPool(cores * 2);
         
         int pass = 1;
         
@@ -70,14 +71,15 @@ public final class MergerJob implements Job {
             log.info("[MERGE_JOB] pass-{} finished (time elapsed: {}s)", pass++, chronPass.getSeconds());
             
             //read directory againg
-            workFiles = getWorkingFiles(this.outputDir)
-                        .stream()
-                        //.filter(f -> f.getName().contains("_tmp-")) //just processed files
-                        .collect(Collectors.toList());
+            workFiles = getWorkingFiles(this.outputDir);
         }
 
         executor.shutdown();
         chron.stop();
+        
+        Arrays.asList(this.outputDir.listFiles()).stream()
+              .forEach(f -> f.renameTo(new File(this.outputDir + File.separator + "merged-output-" + System.currentTimeMillis())));
+        
         log.info("[MERGE_JOB] Job completed in: {} seconds", chron.getSeconds());
         return this.outputDir.listFiles();
     }
@@ -131,6 +133,11 @@ public final class MergerJob implements Job {
     public void setOutputDir(String outputDirectory) {
         this.outputDir = new File(outputDirectory.trim());
         prepareOutputDir();
+    }
+
+    @Override
+    public File getOutputDir() {
+        return this.outputDir;
     }
 
 }

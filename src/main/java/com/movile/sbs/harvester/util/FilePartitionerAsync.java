@@ -190,4 +190,8 @@ public class FilePartitionerAsync extends Thread {
             }
         }
     }
+    
+    public File getOutputDir() {
+        return this.outputDir;
+    }
 }

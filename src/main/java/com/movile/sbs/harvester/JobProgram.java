@@ -40,10 +40,10 @@ public class JobProgram {
         opChron.start();
         
         String outputDirectory = "partitions/dataset";
-        FilePartitionerAsync partitioner = new FilePartitionerAsync(new File(outputDirectory), "part", 20);
+        FilePartitionerAsync partitioner = new FilePartitionerAsync(new File(outputDirectory), "part", 10);
         
         //simulate data ingestion to partition
-        Files.newBufferedReader(Paths.get("log/data-set-100M.log"))
+        Files.newBufferedReader(Paths.get("log/data-set-2M.log"))
              .lines()
              .forEach((line) -> {
                  try {
