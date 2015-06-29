@@ -40,8 +40,9 @@ public class DataDAO {
                 sb.append(" key TEXT,");
                 sb.append(" timestamp INTEGER,");
                 sb.append(" type INTEGER,");
-                sb.append(" priority INTEGER,");
-                sb.append(" UNIQUE (key) ON CONFLICT REPLACE");
+                sb.append(" priority INTEGER");
+                //sb.append(" priority INTEGER,");
+                //sb.append(" UNIQUE (key) ON CONFLICT REPLACE");
                 sb.append(");");
 
                 statement.executeUpdate(sb.toString());

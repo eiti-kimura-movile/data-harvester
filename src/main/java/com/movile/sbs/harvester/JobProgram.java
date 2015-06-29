@@ -53,7 +53,7 @@ public class JobProgram {
         
         AtomicInteger stats = new AtomicInteger();
         //simulate data ingestion to partition
-        Files.newBufferedReader(Paths.get("log/data-set-100M.log"))
+        Files.newBufferedReader(Paths.get("log/data-set-12M.log"))
              .lines()
              .forEach((line) -> {
                  try {
@@ -87,10 +87,11 @@ public class JobProgram {
         Writer writer = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(outputFile)));           
         
         Statement statement = dao.getStatement();
-        ResultSet rs = statement.executeQuery("SELECT * FROM raw_data ORDER BY priority DESC, type DESC, timestamp DESC");
+        String query = "SELECT key, min(timestamp) as mtimestamp, max(type) as mtype, max(priority) as mpriority FROM raw_data GROUP BY key ORDER BY max(priority) DESC, max(type) DESC, min(timestamp) ASC";
+        ResultSet rs = statement.executeQuery(query);
   
         while (rs.next()) {
-            Record rec = new Record(rs.getString("key"), rs.getLong("timestamp"), (short) rs.getInt("type"), (short) rs.getInt("priority"));
+            Record rec = new Record(rs.getString("key"), rs.getLong("mtimestamp"), (short) rs.getInt("mtype"), (short) rs.getInt("mpriority"));
             writer.write(rec.toString());
             writer.write("\n");
             stats.incrementAndGet();
@@ -102,7 +103,7 @@ public class JobProgram {
         }
         
         writer.close();
-        log.info("FINISHED. Total time elapsed: {}min", genChron.getMinutes());
+        log.info("FINISHED. Total time elapsed: {}min ({}s)", genChron.getMinutes(), genChron.getSeconds());
     }
 
 }
