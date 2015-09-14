@@ -8,6 +8,9 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.io.Writer;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
 import java.util.List;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
@@ -16,7 +19,7 @@ import com.movile.sbs.harvester.bean.Record;
 
 /**
  * intend to merge files respecting the sort order
- * @author eitikimura
+ * @author J.P.Eiti Kimura (eiti.kimura@movile.com)
  */
 public final class FileMerger {
 
@@ -28,7 +31,7 @@ public final class FileMerger {
         this(files);
         
         if (outputFile == null) {
-            throw new IllegalArgumentException("you need at least one file to process");
+            throw new IllegalArgumentException("you need to specify the output file");
         }
         
         this.outputFile = outputFile;
@@ -79,12 +82,14 @@ public final class FileMerger {
 
         // there is only one file to process
         if (leftPart != null && rightPart == null) {
-            this.outputFile = leftPart;
+            // move the left part to the output file
+            Files.move(Paths.get(leftPart.getPath()), Paths.get(this.outputFile.getPath()), StandardCopyOption.REPLACE_EXISTING);
             return this.outputFile;
         }
 
         if (rightPart != null && leftPart == null) {
-            this.outputFile = rightPart;
+         // move the left part to the output file
+            Files.move(Paths.get(rightPart.getPath()), Paths.get(this.outputFile.getPath()), StandardCopyOption.REPLACE_EXISTING);
             return this.outputFile;
         }
 

@@ -12,7 +12,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * @author eitikimura
+ * @author J.P.Eiti Kimura (eiti.kimura@movile.com)
  */
 public class FilePartitioner {
 

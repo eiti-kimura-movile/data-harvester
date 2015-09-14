@@ -11,7 +11,7 @@ import java.util.List;
 import java.util.concurrent.ArrayBlockingQueue;
 
 /**
- * @author eitikimura
+ * @author J.P.Eiti Kimura (eiti.kimura@movile.com)
  */
 public class FilePartitionerAsync extends Thread {
 

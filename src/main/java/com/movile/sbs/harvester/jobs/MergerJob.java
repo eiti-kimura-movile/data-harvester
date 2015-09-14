@@ -15,7 +15,7 @@ import com.movile.sbs.harvester.util.Chronometer;
 import com.movile.sbs.harvester.util.FileMerger;
 
 /**
- * @author eitikimura
+ * @author J.P.Eiti Kimura (eiti.kimura@movile.com)
  */
 public final class MergerJob implements Job {
 
@@ -27,6 +27,7 @@ public final class MergerJob implements Job {
     @Override
     public File[] executeJob() throws Exception {
 
+        prepareOutputDir();
         int cores = Runtime.getRuntime().availableProcessors();
         Chronometer chron = new Chronometer();
         chron.start();
@@ -66,8 +67,6 @@ public final class MergerJob implements Job {
             });
             
             latch.await(); // wait tasks to finish merge process
-            
-            System.gc();
             log.info("[MERGE_JOB] pass-{} finished (time elapsed: {}s)", pass++, chronPass.getSeconds());
             
             //read directory againg

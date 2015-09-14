@@ -9,7 +9,7 @@ import ch.qos.logback.classic.Logger;
 
 /**
  * simple size based file partitioner
- * @author eitikimura
+ * @author J.P.Eiti Kimura (eiti.kimura@movile.com)
  */
 public final class LogbackFilePartitioner {
 

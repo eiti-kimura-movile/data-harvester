@@ -5,7 +5,7 @@ import java.util.Comparator;
 import com.movile.sbs.harvester.bean.Record;
 
 /**
- * @author eitikimura
+ * @author J.P.Eiti Kimura (eiti.kimura@movile.com)
  */
 public class RecordComparator implements Comparator<Record> {
 

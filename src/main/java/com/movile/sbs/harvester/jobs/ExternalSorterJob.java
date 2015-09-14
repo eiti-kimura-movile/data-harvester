@@ -17,7 +17,7 @@ import com.movile.sbs.harvester.util.Chronometer;
 import com.movile.sbs.harvester.util.FileSorter;
 
 /**
- * @author eitikimura
+ * @author J.P.Eiti Kimura (eiti.kimura@movile.com)
  */
 public final class ExternalSorterJob implements Job {
 
@@ -31,6 +31,8 @@ public final class ExternalSorterJob implements Job {
     @Override
     public File[] executeJob() throws Exception {
 
+        prepareOutputDir();
+        
         int cores = Runtime.getRuntime().availableProcessors();
         ExecutorService executor = Executors.newFixedThreadPool(cores);
         Chronometer chron = new Chronometer();
@@ -63,6 +65,9 @@ public final class ExternalSorterJob implements Job {
                     log.debug("[SORTER] file: {} processed in {} sec, output file: {}, pending to execute: {}", 
                         file.getName(), timer.getSeconds(), (output != null ? output.getPath() : "ERROR"), latch.getCount());
                     System.gc();
+                    
+                    // remove unsorted file
+                    file.delete();
                 }
             };
             

@@ -18,7 +18,7 @@ import com.movile.sbs.harvester.bean.Record;
 
 /**
  * intend to sort small files
- * @author eitikimura
+ * @author J.P.Eiti Kimura (eiti.kimura@movile.com)
  */
 public final class FileSorter {
 

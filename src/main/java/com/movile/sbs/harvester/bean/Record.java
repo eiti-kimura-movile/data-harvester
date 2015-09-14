@@ -2,7 +2,7 @@ package com.movile.sbs.harvester.bean;
 
 /**
  * Any record representation
- * @author eitikimura
+ * @author J.P.Eiti Kimura (eiti.kimura@movile.com)
  */
 public class Record implements Comparable<Record> {
 

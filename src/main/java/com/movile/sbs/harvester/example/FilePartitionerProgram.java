@@ -1,4 +1,4 @@
-package com.movile.sbs.harvester;
+package com.movile.sbs.harvester.example;
 
 import java.io.File;
 import java.io.IOException;

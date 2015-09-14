@@ -1,4 +1,4 @@
-package com.movile.sbs.harvester;
+package com.movile.sbs.harvester.example;
 
 import java.util.ArrayList;
 import java.util.Arrays;

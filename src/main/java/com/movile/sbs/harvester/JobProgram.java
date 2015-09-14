@@ -20,7 +20,7 @@ import com.movile.sbs.harvester.util.Chronometer;
 import com.movile.sbs.harvester.util.FilePartitionerAsync;
 
 /**
- * @author eitikimura
+ * @author J.P.Eiti Kimura (eiti.kimura@movile.com)
  *
  */
 public class JobProgram {

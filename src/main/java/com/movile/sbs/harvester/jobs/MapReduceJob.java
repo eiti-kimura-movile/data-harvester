@@ -17,7 +17,7 @@ import com.movile.sbs.harvester.util.Chronometer;
 import com.movile.sbs.harvester.util.FilePartitionerAsync;
 
 /**
- * @author eitikimura
+ * @author J.P.Eiti Kimura (eiti.kimura@movile.com)
  */
 public class MapReduceJob implements Job {
 
@@ -36,17 +36,18 @@ public class MapReduceJob implements Job {
         genChron.start();
         opChron.start();
 
-        FilePartitionerAsync partitioner = new FilePartitionerAsync(outputDir, "part", 50);
+        FilePartitionerAsync partitioner = new FilePartitionerAsync(outputDir, "part", 25);
 
         // simulate data ingestion to partition
         Files.newBufferedReader(workDir.toPath()).lines().forEach((line) -> {
             try {
                 // write file to disk with partition
-            partitioner.writeln(line);
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        }
-    }   );
+                partitioner.writeln(line);
+            } catch (Exception e) {
+                throw new RuntimeException(e);
+            }
+          }
+        );
 
         // close the partitioner program
         List<File> files = partitioner.close();

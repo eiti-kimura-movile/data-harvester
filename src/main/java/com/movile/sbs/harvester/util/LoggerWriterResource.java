@@ -15,7 +15,7 @@ import ch.qos.logback.core.util.StatusPrinter;
 
 /**
  * dynamically create logback file appenders
- * @author eitikimura
+ * @author J.P.Eiti Kimura (eiti.kimura@movile.com)
  */
 public final class LoggerWriterResource {
 

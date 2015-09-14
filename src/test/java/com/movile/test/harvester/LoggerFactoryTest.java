@@ -15,7 +15,7 @@ import org.slf4j.Logger;
 import com.movile.sbs.harvester.util.LoggerWriterResource;
 
 /**
- * @author eitikimura
+ * @author J.P.Eiti Kimura (eiti.kimura@movile.com)
  */
 public class LoggerFactoryTest {
 
